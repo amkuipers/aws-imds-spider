@@ -167,12 +167,15 @@ Finished.
 ```
 
 ## python3 spider-imds.py --creds
-Only collects http://flAWS.cloud specific access keys.
+Only collects http://flAWS.cloud specific access keys; two different sets.
 Displays the collected info as a bash script with variable exports.
 Uses the `aws cli` environment variables.
 
-Fragment example:
+Output are lines of bash script to copy:
 ```
+[+] Get latest/dynamic/instance-identity/document ... OK
+[+] Get latest/meta-data/identity-credentials/ec2/security-credentials/ec2-instance ... OK
+[+] Get latest/meta-data/iam/security-credentials/flaws ... OK
 echo Copy these aws cli credentials for http://flAWS.cloud challenge
 export ACCOUNT_ID=975426262029
 export INSTANCE_ID=i-05bef8a081f307783
