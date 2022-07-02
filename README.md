@@ -7,6 +7,21 @@ _Software is still in development phase, used only for an AWS security challenge
 ## python3 spider-imds.py -h
 Shows the help
 
+```
+$ python3 spider-imds.py -h
+usage: Scan IMDS [-h] [-p PROXY] [-o OUTPUT] [-ii] [-c]
+
+options:
+  -h, --help            show this help message and exit
+  -p PROXY, --proxy PROXY
+                        base url for IMDS
+  -o OUTPUT, --output OUTPUT
+                        write json to the file
+  -ii, --instance-identity
+                        only instance-identity
+  -c, --creds           print env script with creds
+```
+
 ## python3 spider-imds.py --proxy http://someec2/proxy
 Uses the proxy application on the EC2 to get to the IMDS endpoint of that EC2.
 
