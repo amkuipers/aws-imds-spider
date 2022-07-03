@@ -30,13 +30,13 @@ class Mem:
             elif value == self.mem[path]:
                 # ignore duplicate
                 pass
-            elif type(self.mem[path]) == str:
+            elif isinstance(self.mem[path], str):
                 # convert str to list of str
                 curr = self.mem[path]
                 self.mem[path] = []
                 self.mem[path].append(curr)
                 self.mem[path].append(value)
-            elif type(self.mem[path]) == list:
+            elif isinstance(self.mem[path], list):
                 if value not in self.mem[path]:
                     self.mem[path].append(value)
                 else:
@@ -127,7 +127,7 @@ class IMDS:
 parser = argparse.ArgumentParser('IMDS Spider')
 parser.add_argument("-p", "--proxy", help="base url for IMDS, use http:// for local")
 parser.add_argument("-o", "--output", help="write json to the file")
-parser.add_argument("-ii", "--instance-identity", help="only instance-identity", action="store_true")
+parser.add_argument("-ii", "--instance-identity", help="only ec2 instance", action="store_true")
 parser.add_argument("-c", "--creds", help="print env script with creds", action="store_true")
 
 args = parser.parse_args()
