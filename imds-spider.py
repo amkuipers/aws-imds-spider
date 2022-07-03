@@ -31,9 +31,9 @@ class Mem:
                 pass
             elif type(self.mem[path]) == str:
                 # convert str to list of str
-                s = self.mem[path]
+                curr = self.mem[path]
                 self.mem[path] = list()
-                self.mem[path].append(s)
+                self.mem[path].append(curr)
                 self.mem[path].append(value)
             elif type(self.mem[path]) == list:
                 if value not in self.mem[path]:
@@ -77,6 +77,7 @@ class IMDS:
         return '/'.join([self.proxy_url, self.imds_url, base, leaf])
 
     def spider(self, base='', leaf='latest', spider=True):
+        """spider, the main function"""
         url = self.uri(base, leaf)
         key = base + '/' + leaf
         self.data.set(base, leaf)
@@ -94,12 +95,11 @@ class IMDS:
         if req.status_code == 404:
             # end reached imds has no further details
             return
-        elif req.status_code != 200:
+        if req.status_code != 200:
             # investigate this
             print(f'[-] Check {url} has {req.status_code} {req.text}')
             return
 
-        ct = req.headers.get('Content-Type')
 
         if req.text.startswith('{'):
             # value is a json structure; store as dict
@@ -113,7 +113,7 @@ class IMDS:
             # known leafs that have base64 values
             self.data.set(key, req.text)
             return
-        if ct == 'text/plain':
+        if req.headers.get('Content-Type') == 'text/plain':
             # list to spider further
             subs = req.text.splitlines()
             for sub in subs:
@@ -138,7 +138,7 @@ parser.add_argument("-c", "--creds", help="print env script with creds", action=
 args = parser.parse_args()
 
 # override args while running in an IDE
-if args.proxy == None:
+if args.proxy is None:
     args.proxy = 'http://4d0cf09b9b2d761a7d87be99d17507bce8b86f3b.flaws.cloud/proxy'
 # args.output = 'imds.json'
 # args.instance_identity = True
@@ -192,9 +192,8 @@ if args.output is None:
     print(imds)
 else:
     print(f'[+] Writing JSON to file {args.output}')
-    file = open(args.output, "w")
-    file.write(str(imds))
-    file.close()
+    with open(args.output, "w") as file:
+        file.write(str(imds))
 
 print('Finished.')
 exit(1)
