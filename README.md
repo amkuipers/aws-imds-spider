@@ -4,11 +4,11 @@ Spiders the AWS EC2 IMDS API using a proxy on that EC2.
 _Software is still in development phase, used only for an AWS security challenge_
 
 
-## ./imds-spider.py -h
+## ./imds_spider.py -h
 Shows the help
 
 ```
-$ ./imds-spider.py -h
+$ ./imds_spider.py -h
 usage: IMDS Spider [-h] [-p PROXY] [-o OUTPUT] [-ii] [-c]
 
 options:
@@ -22,14 +22,14 @@ options:
   -c, --creds           print env script with creds
 ```
 
-## ./imds-spider.py --proxy http://
+## ./imds_spider.py --proxy http://
 Specify `--proxy http://` for local IMDS spidering on an EC2 (untested).
 
 Note that the proxy has a default value with an endpoint of the http://flAWS.cloud challenge.
 That challenge exposes an URL that is on-purpose vulnerable to an SSRF attack, as it shows in the challenge.
 Or specify that url as `--proxy`.
 
-## ./imds-spider.py --output imds.json
+## ./imds_spider.py --output imds.json
 Writes the collected json structure to the file.
 
 See the example file stored in this repo.
@@ -154,7 +154,7 @@ Logs while spidering:
 The JSON is not shown when the output file is configured.
 
 
-## ./imds-spider.py --instance-identity
+## ./imds_spider.py --instance-identity
 Only collect the EC2 instance-identity, so doesn't spider.
 
 Example:
@@ -184,7 +184,7 @@ Example:
 Finished.
 ```
 
-## ./imds-spider.py --creds
+## ./imds_spider.py --creds
 Only collects http://flAWS.cloud specific access keys; two different sets.
 Displays the collected info as a bash script with variable exports.
 Uses the `aws cli` environment variables.
